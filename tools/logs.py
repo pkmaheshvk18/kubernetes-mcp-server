@@ -5,9 +5,10 @@ from kubernetes.client.exceptions import ApiException
 def get_pod_logs(
     pod_name: str,
     namespace: str = "default",
-    tail_lines: int = 100
+    tail_lines: int = 100,
+    previous: bool = False
 ) -> dict:
-    """Get logs from a Kubernetes pod."""
+    """Get current or previous container logs from a Kubernetes pod."""
 
     try:
         config.load_kube_config()
@@ -17,13 +18,15 @@ def get_pod_logs(
         logs = v1.read_namespaced_pod_log(
             name=pod_name,
             namespace=namespace,
-            tail_lines=tail_lines
+            tail_lines=tail_lines,
+            previous=previous
         )
 
         return {
             "pod": pod_name,
             "namespace": namespace,
             "tail_lines": tail_lines,
+            "previous": previous,
             "logs": logs
         }
 
