@@ -1,0 +1,43 @@
+from kubernetes import client, config
+from kubernetes.client.exceptions import ApiException
+
+
+def get_pod_logs(
+    pod_name: str,
+    namespace: str = "default",
+    tail_lines: int = 100
+) -> dict:
+    """Get logs from a Kubernetes pod."""
+
+    try:
+        config.load_kube_config()
+
+        v1 = client.CoreV1Api()
+
+        logs = v1.read_namespaced_pod_log(
+            name=pod_name,
+            namespace=namespace,
+            tail_lines=tail_lines
+        )
+
+        return {
+            "pod": pod_name,
+            "namespace": namespace,
+            "tail_lines": tail_lines,
+            "logs": logs
+        }
+
+    except ApiException as e:
+        if e.status == 404:
+            return {
+                "error": f"Pod '{pod_name}' not found in namespace '{namespace}'."
+            }
+
+        return {
+            "error": f"Kubernetes API error: {e.reason}"
+        }
+
+    except Exception as e:
+        return {
+            "error": f"Unexpected error: {str(e)}"
+        }
